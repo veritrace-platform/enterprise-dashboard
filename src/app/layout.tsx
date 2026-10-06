@@ -1,5 +1,6 @@
+import { routing } from "@/i18n/routing";
 import { QueryProvider } from "@/lib/query-client";
-// import "./globals.css";
+import "./globals.css";
 
 export default function RootLayout({
   children,
@@ -7,11 +8,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang={routing.defaultLocale}>
       <body>
-        <QueryProvider>
-          {children}
-        </QueryProvider>
+        <QueryProvider>{children}</QueryProvider>
       </body>
     </html>
   );

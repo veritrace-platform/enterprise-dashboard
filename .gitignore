@@ -2,12 +2,20 @@
 
 # dependencies
 /node_modules
+/.pnpm-store/
 /.pnp
 .pnp.js
 .yarn/install-state.gz
 
 # testing
 /coverage
+/playwright-report/
+/test-results/
+
+# generated tooling artifacts
+/.swc-cache/
+/.tools/
+/public/sw.js
 
 # next.js
 /.next/

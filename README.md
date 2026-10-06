@@ -6,17 +6,22 @@ This repository is currently the dashboard scaffold. The App Router structure, s
 
 ## Tech stack
 
-- Next.js 14.2 with the App Router
-- React 18 and TypeScript
-- Tailwind CSS and shared shadcn-style UI components
+- Next.js 16 with the App Router and React 19
+- TypeScript and Tailwind CSS 4
+- shadcn/ui with Radix primitives and Lucide React icons
 - TanStack Query for server-state management
-- Axios for HTTP integration
-- Lucide React for icons
+- `openapi-typescript` and `openapi-fetch` for typed API integration
+- React Hook Form and Zod for forms and validation
+- next-intl for Vietnamese (default) and English localization
+- Apache ECharts with `echarts-for-react` for data visualization and bwip-js for barcode generation
+- Serwist for progressive web app support
+- Biome for formatting and linting
+- Vitest, Playwright, and MSW for unit, end-to-end, and API-mocking tests
 
 ## Requirements
 
-- Node.js 18.17 or newer
-- pnpm
+- Node.js 24 LTS
+- pnpm through Corepack
 
 ## Getting started
 
@@ -29,7 +34,7 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-The current scaffold does not require environment variables. Add a local `.env.local` only when a backend integration is introduced; do not commit secrets.
+Set server-only `API_BASE_URL` for backend integration. Dashboard session routes also require `SESSION_SECRET` with at least 32 random bytes. Do not expose either value through `NEXT_PUBLIC_*` or commit secrets.
 
 ## Available scripts
 
@@ -38,7 +43,12 @@ The current scaffold does not require environment variables. Add a local `.env.l
 | `pnpm dev` | Start the development server |
 | `pnpm build` | Create a production build |
 | `pnpm start` | Serve the production build |
-| `pnpm lint` | Run Next.js ESLint checks |
+| `pnpm lint` | Run Biome checks |
+| `pnpm format` | Format source files with Biome |
+| `pnpm typecheck` | Run the TypeScript compiler without emitting files |
+| `pnpm test` | Run Vitest tests |
+| `pnpm test:e2e` | Run Playwright tests |
+| `pnpm test:e2e:ui` | Open the Playwright test runner UI |
 
 ## Application structure
 
@@ -101,10 +111,11 @@ Run the following before opening a pull request:
 
 ```bash
 pnpm lint
+pnpm typecheck
+pnpm test
+pnpm test:e2e
 pnpm build
 ```
-
-No dedicated test script is configured yet.
 
 ## Deployment
 
