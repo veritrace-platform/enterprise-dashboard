@@ -1,12 +1,17 @@
 import createClient from "openapi-fetch";
 import { refreshAccessSession } from "@/lib/auth/refresh";
 import { getAccessToken } from "@/lib/auth/session";
-import type { paths } from "./schema";
+import type { paths as CorePaths } from "./core";
+import { problemSchema } from "./errors";
+import type { paths as TelemetryPaths } from "./telemetry";
 
-export const apiClient = createClient<paths>({
+export const apiClient = createClient<CorePaths & TelemetryPaths>({
   // OpenAPI paths already include the /api/v1 prefix. Same-origin by default per ADR-0021.
-  baseUrl: "",
+  baseUrl: typeof window !== "undefined" ? window.location.origin : "",
+  fetch: (...args) => globalThis.fetch(...args),
 });
+
+const retryableRequests = new WeakMap<Request, Request>();
 
 apiClient.use({
   onRequest({ request }) {
@@ -16,6 +21,10 @@ apiClient.use({
       request.headers.set("Authorization", `Bearer ${accessToken}`);
     }
 
+    if (!request.headers.get("x-veritrace-retried")) {
+      retryableRequests.set(request, request.clone());
+    }
+
     return request;
   },
   async onResponse({ request, response }) {
@@ -23,14 +32,21 @@ apiClient.use({
       return response;
     }
 
-    const problem = (await response
+    const body = await response
       .clone()
       .json()
-      .catch(() => null)) as {
-      code?: string;
-    } | null;
+      .catch(() => null);
+    const parsedProblem = problemSchema.safeParse(body);
+    const code = parsedProblem.success
+      ? parsedProblem.data.code
+      : (body as { code?: unknown } | null)?.code;
 
-    if (problem?.code !== "TOKEN_EXPIRED") {
+    if (code !== "TOKEN_EXPIRED") {
+      return response;
+    }
+
+    const retryRequest = retryableRequests.get(request);
+    if (!retryRequest) {
       return response;
     }
 
@@ -40,10 +56,9 @@ apiClient.use({
       return response;
     }
 
-    const headers = new Headers(request.headers);
-    headers.set("Authorization", `Bearer ${session.access_token}`);
-    headers.set("x-veritrace-retried", "1");
+    retryRequest.headers.set("Authorization", `Bearer ${session.access_token}`);
+    retryRequest.headers.set("x-veritrace-retried", "1");
 
-    return fetch(new Request(request, { headers }));
+    return fetch(retryRequest);
   },
 });

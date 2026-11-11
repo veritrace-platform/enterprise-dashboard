@@ -1,3 +1,5 @@
-export default function Page() {
-  return null;
+import { ShipmentListView } from "@/features/shipments";
+
+export default function ShipmentsPage() {
+  return <ShipmentListView />;
 }

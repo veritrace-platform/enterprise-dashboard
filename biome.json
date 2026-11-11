@@ -9,7 +9,8 @@
       "!coverage",
       "!playwright-report",
       "!test-results",
-      "!src/lib/api/schema.d.ts"
+      "!src/lib/api/core.d.ts",
+      "!src/lib/api/telemetry.d.ts"
     ]
   },
   "formatter": {

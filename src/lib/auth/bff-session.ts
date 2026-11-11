@@ -9,18 +9,27 @@ export interface BffSession {
   refreshToken?: string;
 }
 
-const sessionSecret = process.env.SESSION_SECRET ?? "";
+const sessionSecret =
+  process.env.SESSION_SECRET ||
+  (process.env.NODE_ENV === "development"
+    ? "veritrace-local-dev-session-secret-32chars"
+    : "");
+const DEFAULT_MAX_AGE_SECONDS = 604_800;
 
-const sessionOptions: SessionOptions = {
-  cookieName: "veritrace_session",
-  password: sessionSecret,
-  cookieOptions: {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-  },
-};
+function buildSessionOptions(maxAge = DEFAULT_MAX_AGE_SECONDS): SessionOptions {
+  return {
+    cookieName: "veritrace_session",
+    password: sessionSecret,
+    ttl: maxAge,
+    cookieOptions: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge,
+    },
+  };
+}
 
 function assertSessionSecret() {
   if (sessionSecret.length < 32) {
@@ -28,7 +37,12 @@ function assertSessionSecret() {
   }
 }
 
-export async function getBffSession(): Promise<IronSession<BffSession>> {
+export async function getBffSession(
+  maxAge?: number,
+): Promise<IronSession<BffSession>> {
   assertSessionSecret();
-  return getIronSession<BffSession>(await cookies(), sessionOptions);
+  return getIronSession<BffSession>(
+    await cookies(),
+    buildSessionOptions(maxAge),
+  );
 }
